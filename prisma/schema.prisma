@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  Int      @id @default(autoincrement())
+  username            String
+  email               String   @unique
+  role                String   @default("user") // admin, user , guide
+  password            String
+  phone               String?
+  profile_picture_url String?
+  created_at          DateTime @default(now())
+
+  reviews         Review[]
+  photos          Photo[]
+  favorite_trails FavoriteTrail[]
+  diary           Diary[]
+  guide_profile   GuideProfile?
+  guide_bookings  GuideBooking[]  @relation("BookingUser")
+
+  @@map("users")
+}
+
+model Trail {
+  id                 Int      @id @default(autoincrement())
+  trail_name         String
+  trail_description  String
+  difficulty_level   String // ง่าย, กลาง, ยาก
+  length_kilometer   Decimal
+  duration_estimated Int // ระยะเวลา (นาที)
+  elevation_gain     Int // ระดับความสูงที่ต้องปีนขึ้น (เมตร)
+  elevation_max      Int // ระดับความสูงสูงสุด (เมตร)
+  // coordinates_start  Json? // พิกัดจุดเริ่มเส้นทาง (stored as JSON string)
+  // coordinates_end    Json? // พิกัดจุดสิ้นสุดเส้นทาง (stored as JSON string)
+  latitude_start     String
+  longitude_start    String
+  latitude_end       String
+  longitude_end      String
+  best_time_to_visit String // เช่น "ตลอดทั้งปี", "หลีกเลี่ยงหน้าฝน", "ฤดูหนาว"
+  best_walking_time  String // เช่น "เช้าตรู่", "หลีกเลี่ยงเที่ยง", "ทุกเวลา"
+  trail_type         String // วนกลับมาจุดเริ่มต้น, เดินไปแล้วกลับทางเดิม, จุดเริ่มต้นกับจุดสิ้นสุดไม่ตรงกัน
+  park_id            Int
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  // onDelete Cascade คือ เมื่อ Park ถูกลบ Trail ที่เกี่ยวข้องจะถูกลบด้วย
+  park            Park            @relation(fields: [park_id], references: [id], onDelete: Cascade)
+  trail_features  TrailFeature[]
+  trail_wildlife  TrailWildlife[]
+  facilities      Facility[]
+  safety_info     SafetyInfo[]
+  reviews         Review[]
+  photos          Photo[]
+  favorite_trails FavoriteTrail[]
+  diary           Diary[]
+  guide_profiles  GuideProfile[]
+  guide_bookings  GuideBooking[]
+
+  @@map("trails")
+}
+
+model Park {
+  id                   Int      @id @default(autoincrement())
+  park_name            String
+  park_type            String // อุทยานแห่งชาติ
+  location_province    String // จังหวัด
+  location_district    String? // อำเภอ
+  location_subdistrict String? // ตำบล
+  description          String?
+  // coordinates          Json // พิกัดที่ตั้งอุทยาน (stored as JSON string)
+  latitude             String
+  longitude            String
+  emergency_contact    String? // เบอร์ฉุกเฉิน
+  opening_hours        String?
+  created_at           DateTime @default(now())
+
+  trails           Trail[]
+  facilities       Facility[]
+  equipment_rental EquipmentRental[]
+
+  @@map("parks")
+}
+
+model TrailFeature {
+  id           Int      @id @default(autoincrement())
+  trail_id     Int
+  feature_type String // น้ำตก, ถ้ำ, ยอดเขา, จุดชมวิว, ต้นไม้โบราณ
+  feature_name String // น้ำตกเอรวรรณ์
+  description  String? // น้ำตกสูง 30 เมตร
+  created_at   DateTime @default(now())
+  trail        Trail    @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+
+  @@map("trail_features")
+}
+
+model TrailWildlife {
+  id                Int      @id @default(autoincrement())
+  trail_id          Int
+  animal_name       String // หิงห้อย, นกเงือก
+  animal_type       String // นก, แมลง
+  rarity            String // พบได้บ่อย, พบได้ปานกลาง, พบได้ยาก
+  best_time_to_spot String // เช้าตรู่, เย็น, กลางคืน
+  description       String? // พบได้ตามลำธาร
+  created_at        DateTime @default(now())
+  trail             Trail    @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+
+  @@map("trail_wildlife")
+}
+
+model Facility {
+  id            Int      @id @default(autoincrement())
+  trail_id      Int?
+  park_id       Int?
+  facility_type String // ที่จอดรถ, ห้องน้ำ, ที่พัก, ร้านค้า, จุดพักผ่อน
+  // coordinates   String? // พิกัดที่ตั้งจุดนี้ (stored as JSON string)
+  latitude      String?
+  longitude     String?
+  created_at    DateTime @default(now())
+
+  trail Trail? @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+  park  Park?  @relation(fields: [park_id], references: [id], onDelete: Cascade)
+
+  @@map("facilities")
+}
+
+model EquipmentRental {
+  id                  Int      @id @default(autoincrement())
+  park_id             Int
+  equipment_type      String // เต้นท์, ถุงนอน, เป้, ไฟฉาย, เสื้อกันฝน
+  description         String? // เต้นท์ 2 คนนอน
+  rental_price        Decimal
+  availability_status String   @default("available") // มีให้เช่า, ไม่มีให้เช่า, จองล่วงหน้า
+  quantity_total      Int // จำนวนรวม
+  quantity_available  Int // จำนวนที่ยังมีให้เช่า
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  park Park @relation(fields: [park_id], references: [id])
+
+  @@map("equipment_rentals")
+}
+
+model SafetyInfo {
+  id         Int      @id @default(autoincrement())
+  trail_id   Int
+  risk_type  String // "ทางลื่น", "หน้าผาสูง"
+  // coordinates String? // พิกัด (stored as JSON string)
+  latitude   String?
+  longitude  String?
+  created_at DateTime @default(now())
+  trail      Trail    @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+
+  @@map("safety_info")
+}
+
+model Review {
+  id                     Int      @id @default(autoincrement())
+  trail_id               Int
+  user_id                Int
+  rating                 Int // 1-5
+  review_text            String?
+  difficulty_experienced String // ยาก ปานกลาง ง่าย
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  trail Trail @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([trail_id, user_id]) // ป้องกันการรีวิวซ้ำ
+  @@map("reviews")
+}
+
+model Photo {
+  id          Int      @id @default(autoincrement())
+  trail_id    Int
+  user_id     Int
+  photo_url   String
+  photo_type  String // จุดเด่น, สัตว์ป่า
+  caption     String?
+  uploaded_at DateTime @default(now())
+
+  trail Trail @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("photos")
+}
+
+model FavoriteTrail {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  trail_id   Int
+  notes      String // อยากกลับไปอีกครั้ง
+  created_at DateTime @default(now())
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  trail Trail @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, trail_id]) // หนึ่งคนไม่สามารถ favorite เส้นทางเดียวกันซ้ำได้
+  @@map("favorite_trails")
+}
+
+model Diary {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  trail_id   Int
+  title      String
+  content    String
+  visit_date DateTime // วันที่ไปเดินป่า
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  trail Trail @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+
+  @@map("diaries")
+}
+
+// ข้อมูลไกด์
+model GuideProfile {
+  id               Int      @id @default(autoincrement())
+  user_id          Int      @unique
+  bio              String? // ประวัติสั้นๆ
+  experience_years Int      @default(0)
+  average_rating   Decimal? // ค่าเฉลี่ยจากการรีวิว
+  total_bookings   Int      @default(0)
+  is_available     Boolean  @default(true)
+  price_rate       Decimal
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  user           User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  trail          Trail[]
+  guide_bookings GuideBooking[] @relation("BookingGuide")
+
+  @@map("guide_profiles")
+}
+
+model GuideBooking {
+  id               Int      @id @default(autoincrement())
+  user_id          Int      // ผู้จอง
+  guide_id         Int      // ไกด์ที่ถูกจอง
+  trail_id         Int      // เส้นทางที่จอง
+  booking_date     DateTime // วันที่ต้องการไป
+  start_time       String   // เวลาเริ่ม เช่น "06:00"
+  end_time         String   // เวลาสิ้นสุด เช่น "15:00"
+  total_price      Decimal 
+  status           String   @default("pending") // pending, confirmed, cancelled, completed
+  contact_phone    String   // เบอร์ติดต่อ
+  emergency_contact String? // เบอร์ฉุกเฉิน
+  cancellation_reason String? @db.Text
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  // Relations
+  user   User         @relation("BookingUser", fields: [user_id], references: [id], onDelete: Cascade)
+  guide  GuideProfile @relation("BookingGuide", fields: [guide_id], references: [id], onDelete: Cascade)
+  trail  Trail        @relation(fields: [trail_id], references: [id], onDelete: Cascade)
+
+  @@map("guide_bookings")
+}
