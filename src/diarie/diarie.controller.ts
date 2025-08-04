@@ -6,49 +6,55 @@ import {
   Delete,
   Param,
   Body,
-  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
+import { Request } from '@nestjs/common';
 import { DiarieService } from './diarie.service';
 import { DiarieCreateDto } from './dto/diarie-create.dto';
 import { DiarieUpdateDto } from './dto/diarie-update.dto';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
-@Controller('diarie')
+@Controller('diaries')
+@UseGuards(AuthGuard('jwt'))
 export class DiarieController {
-  constructor(private readonly diarieService: DiarieService) {}
+  constructor(private readonly diarieService: DiarieService) {
+    //
+  }
 
-  // GET /diarie?user_id=xx - ดูไดอารี่ของตัวเอง
   @Get()
-  async getMyDiaries(@Query('user_id') user_id: number) {
-    return this.diarieService.getMyDiaries(Number(user_id));
+  async getMyDiaries(@Request() req) {
+    return this.diarieService.getMyDiaries(Number(req.user.id));
   }
 
-  // POST /diarie - สร้างไดอารี่ใหม่
-  @Post()
-  async createDiarie(@Body() dto: DiarieCreateDto) {
-    return this.diarieService.createDiarie(dto);
-  }
-
-  // GET /diarie/:id - ดูไดอารี่
   @Get(':id')
-  async getDiarieById(@Param('id') id: number) {
-    return this.diarieService.getDiarieById(Number(id));
+  async getDiaryById(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.diarieService.getDiaryById(id, Number(req.user.id));
   }
 
-  // PUT /diarie/:id - แก้ไขไดอารี่
+  @Post()
+  async createDiarie(@Body() createDiarieDto: DiarieCreateDto, @Request() req) {
+    return this.diarieService.createDiarie(
+      createDiarieDto,
+      Number(req.user.id),
+    );
+  }
+
   @Put(':id')
-  async updateDiarie(@Param('id') id: number, @Body() dto: DiarieUpdateDto) {
-    return this.diarieService.updateDiarie(Number(id), dto);
+  async updateDiarie(
+    @Param('id') id: string,
+    @Body() updateDiarieDto: DiarieUpdateDto,
+    @Request() req,
+  ) {
+    return this.diarieService.updateDiarie(
+      Number(id),
+      updateDiarieDto,
+      Number(req.user.id),
+    );
   }
 
-  // DELETE /diarie/:id - ลบไดอารี่
   @Delete(':id')
-  async deleteDiarie(@Param('id') id: number) {
-    return this.diarieService.deleteDiarie(Number(id));
-  }
-
-  // GET /diarie/trail/:trailId - ดูไดอารี่ของเส้นทาง
-  @Get('trail/:trailId')
-  async getDiariesByTrail(@Param('trailId') trailId: number) {
-    return this.diarieService.getDiariesByTrail(Number(trailId));
+  async deleteDiarie(@Param('id') id: string, @Request() req) {
+    return this.diarieService.deleteDiarie(Number(id), Number(req.user.id));
   }
 }

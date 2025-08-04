@@ -209,7 +209,7 @@ model FavoriteTrail {
 
 model Diary {
   id         Int      @id @default(autoincrement())
-  user_id    Int
+  user_id    Int?   
   trail_id   Int
   title      String
   content    String
@@ -217,7 +217,7 @@ model Diary {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user  User?  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   trail Trail @relation(fields: [trail_id], references: [id], onDelete: Cascade)
 
   @@map("diaries")
