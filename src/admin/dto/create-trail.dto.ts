@@ -45,4 +45,7 @@ export class CreateTrailDto {
 
   @IsInt()
   park_id: number;
+
+  // @IsString()
+  // park_name: string;
 }

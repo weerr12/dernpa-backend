@@ -7,7 +7,7 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Controller('review')
 export class ReviewController {
-  constructor(private readonly reviewService: ReviewService) {}
+  constructor(private readonly reviewService: ReviewService) { }
 
   // GET /review - ดูรีวิวทั้งหมด
   @Get()
@@ -16,9 +16,7 @@ export class ReviewController {
   }
   // POST /review - เขียนรีวิวเส้นทาง
   @Post()
-  async createReview(
-    @Body() createReviewDto: CreateReviewDto,
-  ): Promise<ReviewResponseDto> {
+  async createReview(@Body() createReviewDto: CreateReviewDto) {
     return this.reviewService.createReview(createReviewDto);
   }
 

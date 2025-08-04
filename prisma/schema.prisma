@@ -21,7 +21,7 @@ model User {
   photos          Photo[]
   favorite_trails FavoriteTrail[]
   diary           Diary[]
-  guide_profile   GuideProfile?
+  guide_profile   GuideProfile[]
   guide_bookings  GuideBooking[]  @relation("BookingUser")
 
   @@map("users")
@@ -64,6 +64,7 @@ model Trail {
   @@map("trails")
 }
 
+
 model Park {
   id                   Int      @id @default(autoincrement())
   park_name            String
@@ -79,7 +80,7 @@ model Park {
   opening_hours        String?
   created_at           DateTime @default(now())
 
-  trails           Trail[]
+  trails           Trail[] // หนึ่ง Park มีหลาย Trail
   facilities       Facility[]
   equipment_rental EquipmentRental[]
 
@@ -167,6 +168,8 @@ model Review {
   difficulty_experienced String // ยาก ปานกลาง ง่าย
   created_at             DateTime @default(now())
   updated_at             DateTime @updatedAt
+  is_approved            Boolean  @default(false)
+  is_hidden              Boolean  @default(false)
 
   trail Trail @relation(fields: [trail_id], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -223,7 +226,7 @@ model Diary {
 // ข้อมูลไกด์
 model GuideProfile {
   id               Int      @id @default(autoincrement())
-  user_id          Int      @unique
+  user_id          Int      
   bio              String? // ประวัติสั้นๆ
   experience_years Int      @default(0)
   average_rating   Decimal? // ค่าเฉลี่ยจากการรีวิว
@@ -263,3 +266,11 @@ model GuideBooking {
 
   @@map("guide_bookings")
 }
+
+
+// Parent                    Child                               Type      Description
+// User    Review, Photo, FavoriteTrail, Diary, GuideBooking      1:M     ผู้ใช้หนึ่งคนมีหลายกิจกรรม
+// User                    GuideProfile                           1:1     ผู้ใช้หนึ่งคนมีโปรไฟล์ไกด์หนึ่งเดียว
+// Trail   TrailFeature, TrailWildlife, SafetyInfo, Facility      1:M     เส้นทางหนึ่งมีหลายรายละเอียด
+// Park   ParkTrail, Facility, EquipmentRental                    1:M     อุทยานหนึ่งมีหลายเส้นทาง
+// Guide               Profile   GuideBooking                     1:M     ไกด์หนึ่งคนรับหลายการจอง

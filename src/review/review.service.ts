@@ -6,22 +6,9 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Injectable()
 export class ReviewService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
-  async createReview(
-    createReviewDto: CreateReviewDto,
-  ): Promise<ReviewResponseDto> {
-    const existingReview = await this.prismaService.review.findFirst({
-      where: {
-        trail_id: createReviewDto.trailId,
-        user_id: createReviewDto.userId,
-      },
-    });
-    if (existingReview) {
-      throw new NotFoundException(
-        'Review already exists for this trail by this user',
-      );
-    }
+  async createReview(createReviewDto: CreateReviewDto) {
     const review = await this.prismaService.review.create({
       data: {
         trail_id: createReviewDto.trailId,
@@ -33,16 +20,7 @@ export class ReviewService {
     });
     return {
       message: 'Review created successfully',
-      review: {
-        id: review.id,
-        trail_id: review.trail_id,
-        user_id: review.user_id,
-        rating: review.rating,
-        review_text: review.review_text,
-        difficulty_experienced: review.difficulty_experienced,
-        created_at: review.created_at,
-        updated_at: review.updated_at,
-      },
+      review,
     };
   }
 
