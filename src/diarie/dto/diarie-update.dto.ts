@@ -1,6 +1,9 @@
-import { IsString, IsDateString, IsOptional } from 'class-validator';
+import { IsString, IsDateString, IsOptional, IsNumber } from 'class-validator';
 
 export class DiarieUpdateDto {
+  @IsNumber()
+  trail_id: number;
+
   @IsOptional()
   @IsString()
   title?: string;
