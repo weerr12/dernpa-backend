@@ -14,7 +14,9 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) { }
+  ) {
+    //
+  }
 
   async signup(signUpDto: SignUpDto) {
     const { username, email, password } = signUpDto;

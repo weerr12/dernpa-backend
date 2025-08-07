@@ -26,7 +26,7 @@ model User {
 
   @@map("users")
 }
-
+// tag 
 model Trail {
   id                 Int      @id @default(autoincrement())
   trail_name         String
